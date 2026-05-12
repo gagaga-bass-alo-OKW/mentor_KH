@@ -7,12 +7,41 @@ url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_KEY"]
 supabase = create_client(url, key)
 
-st.set_page_config(page_title="メンター登録", page_icon="🎓")
+st.set_page_config(page_title="開邦雄飛会", page_icon="🎓")
 
-# URLのトークンを取得
 params = st.query_params
 token = params.get("token", None)
+mode = params.get("mode", None)
 
+# 管理者画面
+if mode == st.secrets["ADMIN_SECRET"]:
+    st.title("🔧 管理者画面")
+    st.subheader("招待リンクの発行")
+
+    email_input = st.text_input("招待するメンターのメールアドレス（任意）")
+
+    if st.button("招待リンクを発行"):
+        new_token = str(uuid.uuid4())
+        supabase.table("invite_tokens").insert({
+            "token": new_token,
+            "email": email_input if email_input else None
+        }).execute()
+        app_url = st.secrets["APP_URL"]
+        invite_url = f"{app_url}?token={new_token}"
+        st.success("招待リンクを発行しました！")
+        st.code(invite_url)
+
+    st.divider()
+    st.subheader("登録済みメンター一覧")
+    mentors = supabase.table("mentors").select("*").execute()
+    if mentors.data:
+        for m in mentors.data:
+            st.write(f"**{m['name']}** ({m['name_kana']}) - {m['role']} - {m['email']}")
+    else:
+        st.info("まだ登録されたメンターはいません。")
+    st.stop()
+
+# トークン確認
 def check_token(token):
     result = supabase.table("invite_tokens").select("*").eq("token", token).eq("used", False).execute()
     return len(result.data) > 0
