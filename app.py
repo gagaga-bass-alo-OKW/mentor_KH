@@ -130,7 +130,7 @@ else:
                         info_col, img_col = st.columns([1, 1])
                         with info_col:
                             st.subheader(m["name"])
-                            st.caption(f"{m['name_kana']}")
+                            st.write(f"{m['name_kana']}")
                             st.write(f"📅 第{m['entry_period']}期" if m["entry_period"] else "")
                             st.write(f"🏫 {m['course']}" if m["course"] else "")
                             st.write(f"📍 {m['location']}" if m["location"] else "")
