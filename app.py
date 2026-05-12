@@ -130,18 +130,12 @@ else:
                         if m.get("photo_url"):
                             try:
                                 photo = m["photo_url"]
-                                if "drive.google.com" in photo:
-                                    if "/file/d/" in photo:
-                                        file_id = photo.split("/file/d/")[1].split("/")[0]
-                                    elif "id=" in photo:
-                                        file_id = photo.split("id=")[1].split("&")[0]
-                                    else:
-                                        file_id = None
-                                    if file_id:
-                                        photo = f"https://drive.google.com/uc?export=view&id={file_id}"
-                                st.image(photo, width=120)
-                            except:
-                                pass
+                                if "drive.google.com" in photo and "/file/d/" in photo:
+                                    file_id = photo.split("/file/d/")[1].split("/")[0].split("?")[0]
+                                    photo = f"https://drive.google.com/uc?export=view&id={file_id}"
+                                st.image(photo, use_container_width=False, width=120)
+                            except Exception as e:
+                                st.write(f"画像エラー: {e}")
                         st.subheader(m["name"])
                         st.caption(f"{m['name_kana']}")
                         st.write(f"📅 第{m['entry_period']}期" if m["entry_period"] else "")
