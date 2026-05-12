@@ -132,7 +132,7 @@ else:
                                 photo = m["photo_url"]
                                 if "drive.google.com" in photo and "/file/d/" in photo:
                                     file_id = photo.split("/file/d/")[1].split("/")[0].split("?")[0]
-                                    photo = f"https://drive.google.com/uc?export=view&id={file_id}"
+                                    photo = f"https://drive.google.com/thumbnail?id={file_id}&sz=w200"
                                 st.image(photo, use_container_width=False, width=120)
                             except Exception as e:
                                 st.write(f"画像エラー: {e}")
