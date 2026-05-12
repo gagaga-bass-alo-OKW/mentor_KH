@@ -129,7 +129,7 @@ else:
                         # 上段：基礎情報 ＋ 写真
                         info_col, img_col = st.columns([1, 1])
                         with info_col:
-                            st.markdown(f"####{m["name"]}")
+                            st.markdown(f"#### {m['name']}")
                             st.write(f"{m['name_kana']}")
                             st.write(f"📅 第{m['entry_period']}期" if m["entry_period"] else "")
                             st.write(f"🏫 {m['course']}" if m["course"] else "")
