@@ -7,11 +7,12 @@ url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_KEY"]
 supabase = create_client(url, key)
 
-st.set_page_config(page_title="開邦雄飛会", page_icon="🎓")
+st.set_page_config(page_title="開邦雄飛会 メンター", page_icon="🎓")
 
 params = st.query_params
 token = params.get("token", None)
 mode = params.get("mode", None)
+page = params.get("page", "list")
 
 # 管理者画面
 if mode == st.secrets["ADMIN_SECRET"]:
@@ -27,7 +28,7 @@ if mode == st.secrets["ADMIN_SECRET"]:
             "email": email_input if email_input else None
         }).execute()
         app_url = st.secrets["APP_URL"]
-        invite_url = f"{app_url}?token={new_token}"
+        invite_url = f"{app_url}?page=register&token={new_token}"
         st.success("招待リンクを発行しました！")
         st.code(invite_url)
 
@@ -41,54 +42,93 @@ if mode == st.secrets["ADMIN_SECRET"]:
         st.info("まだ登録されたメンターはいません。")
     st.stop()
 
-# トークン確認
-def check_token(token):
-    result = supabase.table("invite_tokens").select("*").eq("token", token).eq("used", False).execute()
-    return len(result.data) > 0
+# メンター登録ページ
+if page == "register":
+    def check_token(token):
+        result = supabase.table("invite_tokens").select("*").eq("token", token).eq("used", False).execute()
+        return len(result.data) > 0
 
-def mark_token_used(token):
-    supabase.table("invite_tokens").update({"used": True}).eq("token", token).execute()
+    def mark_token_used(token):
+        supabase.table("invite_tokens").update({"used": True}).eq("token", token).execute()
 
-# トークンがない場合
-if not token or not check_token(token):
-    st.error("このページにアクセスする権限がありません。管理者から招待リンクを受け取ってください。")
+    if not token or not check_token(token):
+        st.error("このページにアクセスする権限がありません。管理者から招待リンクを受け取ってください。")
+        st.stop()
+
+    st.title("🎓 メンター登録フォーム")
+    st.write("開邦雄飛会メンター登録へようこそ。以下の情報を入力してください。")
+
+    with st.form("mentor_form"):
+        role = st.selectbox("登録区分 *", ["メンターに登録", "特設授業の講師に登録", "両方"])
+        name = st.text_input("氏名 *")
+        name_kana = st.text_input("ふりがな *")
+        email = st.text_input("メールアドレス *")
+        entry_period = st.selectbox("入学期 *", list(range(1, 39)) + ["その他"])
+        course = st.selectbox("在学時のコース *", ["理数科", "英語科", "芸術科", "学術探究科", "その他"])
+        location = st.text_input("現在の居住地（例：東京都）")
+        bio = st.text_area("一言プロフィール（後輩が最初に目にする紹介文です）")
+        photo_url = st.text_input("プロフィール写真URL（Google DriveのリンクまたはなしでもOK）")
+        show_on_hp = st.radio("HPへの掲載 *", ["掲載可", "掲載不可"]) == "掲載可"
+        submitted = st.form_submit_button("登録する")
+
+    if submitted:
+        if not name or not name_kana or not email:
+            st.error("氏名・ふりがな・メールアドレスは必須です。")
+        else:
+            data = {
+                "name": name,
+                "name_kana": name_kana,
+                "email": email,
+                "entry_period": int(entry_period) if entry_period != "その他" else None,
+                "course": course,
+                "location": location,
+                "bio": bio,
+                "photo_url": photo_url,
+                "show_on_hp": show_on_hp,
+                "role": role,
+            }
+            supabase.table("mentors").insert(data).execute()
+            mark_token_used(token)
+            st.success("✅ 登録が完了しました！ご協力ありがとうございます。")
+            st.balloons()
     st.stop()
 
-# 登録フォーム
-st.title("🎓 メンター登録フォーム")
-st.write("開邦雄飛会メンター登録へようこそ。以下の情報を入力してください。")
+# メンター一覧ページ（デフォルト）
+st.title("🎓 開邦雄飛会 メンター一覧")
+st.write("在校生の相談に乗ってくれる先輩メンターたちです。")
 
-with st.form("mentor_form"):
-    role = st.selectbox("登録区分 *", ["メンターに登録", "特設授業の講師に登録", "両方"])
-    name = st.text_input("氏名 *")
-    name_kana = st.text_input("ふりがな *")
-    email = st.text_input("メールアドレス *")
-    entry_period = st.selectbox("入学期 *", list(range(1, 39)) + ["その他"])
-    course = st.selectbox("在学時のコース *", ["理数科", "英語科", "芸術科", "学術探究科", "その他"])
-    location = st.text_input("現在の居住地（例：東京都）")
-    bio = st.text_area("一言プロフィール（後輩が最初に目にする紹介文です）")
-    photo_url = st.text_input("プロフィール写真URL（Google DriveのリンクまたはなしでもOK）")
-    show_on_hp = st.radio("HPへの掲載 *", ["掲載可", "掲載不可"]) == "掲載可"
+mentors = supabase.table("mentors").select("*").eq("show_on_hp", True).execute()
 
-    submitted = st.form_submit_button("登録する")
+if not mentors.data:
+    st.info("現在登録されているメンターはいません。")
+else:
+    # 検索・フィルター
+    col1, col2 = st.columns(2)
+    with col1:
+        search = st.text_input("🔍 名前で検索")
+    with col2:
+        course_filter = st.selectbox("コースで絞り込み", ["すべて", "理数科", "英語科", "芸術科", "学術探究科", "その他"])
 
-if submitted:
-    if not name or not name_kana or not email:
-        st.error("氏名・ふりがな・メールアドレスは必須です。")
-    else:
-        data = {
-            "name": name,
-            "name_kana": name_kana,
-            "email": email,
-            "entry_period": int(entry_period) if entry_period != "その他" else None,
-            "course": course,
-            "location": location,
-            "bio": bio,
-            "photo_url": photo_url,
-            "show_on_hp": show_on_hp,
-            "role": role,
-        }
-        supabase.table("mentors").insert(data).execute()
-        mark_token_used(token)
-        st.success("✅ 登録が完了しました！ご協力ありがとうございます。")
-        st.balloons()
+    filtered = mentors.data
+    if search:
+        filtered = [m for m in filtered if search in m["name"] or search in m["name_kana"]]
+    if course_filter != "すべて":
+        filtered = [m for m in filtered if m["course"] == course_filter]
+
+    st.write(f"**{len(filtered)}名**のメンターが登録されています。")
+    st.divider()
+
+    # カード表示
+    for i in range(0, len(filtered), 2):
+        cols = st.columns(2)
+        for j, col in enumerate(cols):
+            if i + j < len(filtered):
+                m = filtered[i + j]
+                with col:
+                    with st.container(border=True):
+                        st.subheader(m["name"])
+                        st.caption(f"{m['name_kana']}")
+                        st.write(f"📅 第{m['entry_period']}期" if m["entry_period"] else "")
+                        st.write(f"🏫 {m['course']}" if m["course"] else "")
+                        st.write(f"📍 {m['location']}" if m["location"] else "")
+                        st.write(f"💬 {m['bio']}" if m["bio"] else "")
