@@ -126,7 +126,14 @@ else:
                 m = filtered[i + j]
                 with col:
                    with st.container(border=True):
+                        # 上段：基礎情報 ＋ 写真
                         info_col, img_col = st.columns([2, 1])
+                        with info_col:
+                            st.subheader(m["name"])
+                            st.caption(f"{m['name_kana']}")
+                            st.write(f"📅 第{m['entry_period']}期" if m["entry_period"] else "")
+                            st.write(f"🏫 {m['course']}" if m["course"] else "")
+                            st.write(f"📍 {m['location']}" if m["location"] else "")
                         with img_col:
                             if m.get("photo_url"):
                                 try:
@@ -137,10 +144,7 @@ else:
                                     st.image(photo, use_container_width=True)
                                 except Exception as e:
                                     st.write(f"画像エラー: {e}")
-                        with info_col:
-                            st.subheader(m["name"])
-                            st.caption(f"{m['name_kana']}")
-                            st.write(f"📅 第{m['entry_period']}期" if m["entry_period"] else "")
-                            st.write(f"🏫 {m['course']}" if m["course"] else "")
-                            st.write(f"📍 {m['location']}" if m["location"] else "")
-                            st.write(f"💬 {m['bio']}" if m["bio"] else "")
+                        # 下段：コメント
+                        if m.get("bio"):
+                            st.divider()
+                            st.write(f"💬 {m['bio']}")
