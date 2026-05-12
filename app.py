@@ -126,7 +126,7 @@ else:
                 m = filtered[i + j]
                 with col:
                    with st.container(border=True):
-                        img_col, info_col = st.columns([1, 2])
+                        info_col, img_col = st.columns([2, 1])
                         with img_col:
                             if m.get("photo_url"):
                                 try:
