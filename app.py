@@ -127,7 +127,7 @@ else:
                 with col:
                    with st.container(border=True):
                         # 上段：基礎情報 ＋ 写真
-                        info_col, img_col = st.columns([1, 2])
+                        info_col, img_col = st.columns([1, 1])
                         with info_col:
                             st.subheader(m["name"])
                             st.caption(f"{m['name_kana']}")
