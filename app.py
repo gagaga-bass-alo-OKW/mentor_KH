@@ -125,20 +125,22 @@ else:
             if i + j < len(filtered):
                 m = filtered[i + j]
                 with col:
-                    with st.container(border=True):
-                        # 画像表示
-                        if m.get("photo_url"):
-                            try:
-                                photo = m["photo_url"]
-                                if "drive.google.com" in photo and "/file/d/" in photo:
-                                    file_id = photo.split("/file/d/")[1].split("/")[0].split("?")[0]
-                                    photo = f"https://drive.google.com/thumbnail?id={file_id}&sz=w200"
-                                st.image(photo, use_container_width=False, width=120)
-                            except Exception as e:
-                                st.write(f"画像エラー: {e}")
-                        st.subheader(m["name"])
-                        st.caption(f"{m['name_kana']}")
-                        st.write(f"📅 第{m['entry_period']}期" if m["entry_period"] else "")
-                        st.write(f"🏫 {m['course']}" if m["course"] else "")
-                        st.write(f"📍 {m['location']}" if m["location"] else "")
-                        st.write(f"💬 {m['bio']}" if m["bio"] else "")
+                   with st.container(border=True):
+                        img_col, info_col = st.columns([1, 2])
+                        with img_col:
+                            if m.get("photo_url"):
+                                try:
+                                    photo = m["photo_url"]
+                                    if "drive.google.com" in photo and "/file/d/" in photo:
+                                        file_id = photo.split("/file/d/")[1].split("/")[0].split("?")[0]
+                                        photo = f"https://drive.google.com/thumbnail?id={file_id}&sz=w200"
+                                    st.image(photo, use_container_width=True)
+                                except Exception as e:
+                                    st.write(f"画像エラー: {e}")
+                        with info_col:
+                            st.subheader(m["name"])
+                            st.caption(f"{m['name_kana']}")
+                            st.write(f"📅 第{m['entry_period']}期" if m["entry_period"] else "")
+                            st.write(f"🏫 {m['course']}" if m["course"] else "")
+                            st.write(f"📍 {m['location']}" if m["location"] else "")
+                            st.write(f"💬 {m['bio']}" if m["bio"] else "")
