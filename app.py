@@ -8,6 +8,77 @@ key = st.secrets["SUPABASE_KEY"]
 supabase = create_client(url, key)
 
 st.set_page_config(page_title="開邦雄飛会 メンター", page_icon="🎓")
+st.markdown("""
+<style>
+/* メインカラー */
+:root {
+    --kh-main: #378ADD;
+    --kh-main-light: #E6F1FB;
+    --kh-main-dark: #185FA5;
+    --kh-main-border: #B5D4F4;
+}
+
+/* ヘッダー */
+[data-testid="stAppViewContainer"] {
+    background-color: white;
+}
+
+/* ボタン */
+.stButton > button {
+    background-color: var(--kh-main) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+}
+.stButton > button:hover {
+    background-color: var(--kh-main-dark) !important;
+}
+
+/* テキスト入力・セレクトボックス */
+.stTextInput > div > div > input,
+.stSelectbox > div > div {
+    border-color: var(--kh-main-border) !important;
+    border-radius: 8px !important;
+}
+
+/* カード */
+[data-testid="stVerticalBlock"] > div[data-testid="element-container"] > div[data-testid="stVerticalBlock"] {
+    border: 0.5px solid var(--kh-main-border) !important;
+    border-radius: 12px !important;
+    padding: 12px !important;
+}
+
+/* タグ風テキスト */
+.mentor-tag {
+    display: inline-block;
+    background: var(--kh-main-light);
+    color: var(--kh-main-dark);
+    border: 0.5px solid var(--kh-main-border);
+    border-radius: 99px;
+    padding: 3px 10px;
+    font-size: 12px;
+    margin: 2px;
+}
+
+/* ヒーローセクション */
+.hero-section {
+    background: var(--kh-main-light);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+.hero-section h2 {
+    color: var(--kh-main-dark);
+    font-size: 22px;
+    margin-bottom: 6px;
+}
+.hero-section p {
+    color: #555;
+    font-size: 14px;
+}
+</style>
+""", unsafe_allow_html=True)
 
 params = st.query_params
 token = params.get("token", None)
@@ -55,8 +126,12 @@ if page == "register":
         st.error("このページにアクセスする権限がありません。管理者から招待リンクを受け取ってください。")
         st.stop()
 
-    st.title("🎓 メンター登録フォーム")
-    st.write("開邦雄飛会メンター登録へようこそ。以下の情報を入力してください。")
+    st.markdown("""
+<div class="hero-section">
+    <h2>🎓 開邦雄飛会 メンター一覧</h2>
+    <p>あなたの悩みに寄り添う先輩を探そう</p>
+</div>
+""", unsafe_allow_html=True)
 
     with st.form("mentor_form"):
         role = st.selectbox("登録区分 *", ["メンターに登録", "特設授業の講師に登録", "両方"])
