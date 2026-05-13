@@ -179,7 +179,7 @@ if page == "consult":
     with st.form("consult_form"):
         student_name = st.text_input("氏名 *")
         student_email = st.text_input("メールアドレス *")
-        grade = st.selectbox("学年 *", ["1年生", "2年生", "3年生"])
+        grade = st.selectbox("学年 *", ["中１", "中２", "中３", "高１", "高２", "高３", "保護者"])
         content = st.text_area("相談内容 *", placeholder="どんなことでも気軽に書いてください。")
 
         st.write("**希望日時を選んでください（複数選択可）**")
