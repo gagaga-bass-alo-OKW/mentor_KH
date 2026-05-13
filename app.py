@@ -168,6 +168,74 @@ if page == "register":
             st.balloons()
     st.stop()
 
+# 生徒の相談フォーム
+if page == "consult":
+    import datetime
+    import json
+
+    st.title("📝 メンターに相談する")
+    st.write("以下のフォームに入力して送信してください。")
+
+    with st.form("consult_form"):
+        student_name = st.text_input("氏名 *")
+        student_email = st.text_input("メールアドレス *")
+        grade = st.selectbox("学年 *", ["1年生", "2年生", "3年生"])
+        content = st.text_area("相談内容 *", placeholder="どんなことでも気軽に書いてください。")
+
+        st.write("**希望日時を選んでください（複数選択可）**")
+        st.caption("面談は基本的にオンラインです。可能な日時を多めに選ぶと調整しやすくなります。")
+
+        today = datetime.date.today()
+        dates = [today + datetime.timedelta(days=i) for i in range(1, 15)]
+        hours = list(range(9, 22))
+        day_labels = {"Mon":"月","Tue":"火","Wed":"水","Thu":"木","Fri":"金","Sat":"土","Sun":"日"}
+
+        selected_times = []
+        for date in dates:
+            dow = day_labels[date.strftime("%a")]
+            label = date.strftime(f"%m/%d（{dow}）")
+            st.write(f"**{label}**")
+            cols = st.columns(len(hours))
+            for i, hour in enumerate(hours):
+                with cols[i]:
+                    st.caption(f"{hour}時")
+                    if st.checkbox("", key=f"{date}_{hour}"):
+                        selected_times.append(f"{label} {hour}:00")
+
+        st.divider()
+        st.write("**メンターの指定**")
+        mentor_option = st.radio("", ["全体募集（誰でもOK）", "メンターを指名する"])
+
+        mentor_id = None
+        if mentor_option == "メンターを指名する":
+            mentors = supabase.table("mentors").select("id, name, entry_period").eq("show_on_hp", True).execute()
+            if mentors.data:
+                mentor_options = {f"{m['name']}（第{m['entry_period']}期）": m["id"] for m in mentors.data}
+                selected_mentor = st.selectbox("メンターを選んでください", list(mentor_options.keys()))
+                mentor_id = mentor_options[selected_mentor]
+
+        submitted = st.form_submit_button("送信する")
+
+    if submitted:
+        if not student_name or not student_email or not content:
+            st.error("氏名・メールアドレス・相談内容は必須です。")
+        elif len(selected_times) == 0:
+            st.error("希望日時を1つ以上選んでください。")
+        else:
+            data = {
+                "student_name": student_name,
+                "student_email": student_email,
+                "grade": grade,
+                "content": content,
+                "available_times": json.dumps(selected_times, ensure_ascii=False),
+                "mentor_id": mentor_id,
+                "is_open": mentor_option == "全体募集（誰でもOK）",
+                "status": "pending",
+            }
+            supabase.table("consultations").insert(data).execute()
+            st.success("✅ 送信完了しました！メンターからの連絡をお待ちください。")
+            st.balloons()
+    st.stop()
 # メンター一覧ページ（デフォルト）
 st.title("🎓 開邦雄飛会 メンター一覧")
 st.write("在校生の相談に乗ってくれる先輩メンターたちです。")
